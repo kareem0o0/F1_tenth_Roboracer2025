@@ -49,7 +49,7 @@ path_len = len(goal)
 
 # pure pursuit parameter 
 velocity = 0.07  
-look_ahead = 3.3  
+look_ahead = 1.5 
 wheelbase = 0.3240 
 # goal is Nx2 -> [:,0] = x , [:,1] = y
 
@@ -57,36 +57,8 @@ distances = np.sqrt((goal[:,0] - x_postition)**2 + (goal[:,1] - y_postition)**2)
 index = np.argmin(distances)  # index of closest point
 
 count = index   # start index  
-search_len = path_len / 4
+search_len = path_len / 5
 search_end = min(count + int(search_len), path_len) # to avoid being out of range 
-
-
-# ---------- Live Plotting Setup -------------
-
-car_path_x = []
-car_path_y = []
-
-plt.ion()
-fig, ax = plt.subplots()
-
-# Red dot for current position
-sc, = ax.plot([], [], 'ro')
-
-# Green X for goal point
-# Plot all waypoints as green Xs
-goal_markers = ax.plot(goal[:, 1],goal[:, 0],  'm.')[0]
-
-# Line to draw full path
-path_line, = ax.plot([], [], 'c--', linewidth=1.5)
-
-target_point, = ax.plot([], [], 'yo', markersize=8)  # <--- new target visual
-
-
-ax.set_title("Live Car Trajectory")
-ax.set_xlabel("X [m]")
-ax.set_ylabel("Y [m]")
-ax.grid(True)
-
 
 
 #-----------------------call back functions-------------------------------- 
@@ -159,21 +131,16 @@ def timer_func( node, st_pub , thr_pub ) :
     if len(nearest_idx) >  0 :  
         count = start + nearest_idx[0]
     else :
-        count += 30  
+        count += 1  
 
     if ( count >= path_len  ):  ## start point faraway = no oscullation
-        count = 25
+        count = 10
 
     xy_cf = transformation( postition , goal[count] ,car_yaw )
     curve = curvature_calc ( xy_cf )
     steer = steering_func( wheelbase, curve ) / 0.5236
     st.data =  float(steer)
 
-    # calc error between map positioning and real ips 
-    x_map = path_data.iloc[count]['x']
-    y_map = path_data.iloc[count]['y']
-    print(f"Error → X: {(postition[0]-x_map):.3f} m | Y: {(postition[1]-y_map):.3f} m")
-    
     thr_msg = velocity
     thr.data = thr_msg
     st_pub.publish(st) 
@@ -184,21 +151,6 @@ def timer_func( node, st_pub , thr_pub ) :
     node.get_logger().info(f" throttle command value : {thr_msg} >_<" )
     node.get_logger().info(f" Lookahead  : {look_ahead} >_<" )
     node.get_logger().info(f" index   : {count} >_<" )
-
-        # --- Live plot update ---
-    car_path_x.append(postition[0])
-    car_path_y.append(postition[1])
-
-    sc.set_data(postition[1] , postition[0] )  # red dot
-    path_line.set_data( car_path_y , car_path_x)  # trajectory line
-    # Update target point visual
-    target_point.set_data(goal[count][1], goal[count][0])
-
-    ax.relim()
-    ax.autoscale_view()
-    fig.canvas.draw()
-    fig.canvas.flush_events()
-
 
 #------------------------- Main ------------------------
 def main (args=None):    
@@ -231,4 +183,4 @@ def main (args=None):
 if __name__ == "__main__" :    # the entry of the code     
 
 
-    main()                  
+    main()   

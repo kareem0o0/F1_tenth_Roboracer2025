@@ -25,6 +25,7 @@ setup(
     entry_points={
         'console_scripts': [
             'wall_follower = roboracer2025.wall_follower:main',
+            'pps_cdc_QRound = roboracer2025.pps_cdc_QRound:main',
         ],
     },
 )
