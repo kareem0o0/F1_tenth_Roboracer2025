@@ -24,6 +24,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'wall_follower = roboracer2025.wall_follower:main',
         ],
     },
 )
